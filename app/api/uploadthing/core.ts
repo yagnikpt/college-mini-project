@@ -6,7 +6,9 @@ import { getUserByClerkId } from "@/lib/data/user";
 const f = createUploadthing();
 export const ourFileRouter = {
   audioUploader: f({
-    audio: {},
+    audio: {
+      maxFileSize: "16MB",
+    },
   })
     .middleware(async () => {
       const { userId } = await auth();

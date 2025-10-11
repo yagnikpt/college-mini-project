@@ -154,7 +154,13 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
                   endpoint="audioUploader"
                   onClientUploadComplete={handleUploadComplete}
                   onUploadError={(error) => {
-                    console.error("Upload error:", error);
+                    if (error.message?.includes("FileSizeMismatch")) {
+                      alert(
+                        "Upload failed: File size mismatch. Please try again.",
+                      );
+                      return;
+                    }
+                    console.log("Upload error:", error, error.code);
                   }}
                   appearance={{
                     button: {

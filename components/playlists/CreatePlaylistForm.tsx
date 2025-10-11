@@ -2,7 +2,7 @@
 
 import { Button } from "@heroui/button";
 import { Checkbox } from "@heroui/checkbox";
-import { Input } from "@heroui/input";
+import { Input, Textarea } from "@heroui/input";
 import { Spinner } from "@heroui/spinner";
 import { useState } from "react";
 import { createPlaylist } from "@/lib/data/user";
@@ -67,12 +67,11 @@ export function CreatePlaylistForm({ onSuccess }: CreatePlaylistFormProps) {
         <label htmlFor="description" className="block text-sm font-medium mb-2">
           Description (optional)
         </label>
-        <textarea
+        <Textarea
           id="description"
           placeholder="Enter playlist description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           rows={3}
           maxLength={1000}
         />
