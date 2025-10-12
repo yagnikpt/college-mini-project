@@ -130,18 +130,50 @@ export async function getUserSongsByClerkId(clerkId: string): Promise<Song[]> {
 }
 
 /**
- * Get user playlists by Clerk ID
+ * Get user playlists by Clerk ID with first 4 songs for cover display
  */
-export async function getUserPlaylistsByClerkId(
+export async function getUserPlaylistsWithSongsByClerkId(
   clerkId: string,
-): Promise<Playlist[]> {
+): Promise<
+  Array<{
+    playlist: Playlist;
+    songs: Song[];
+  }>
+> {
   try {
     const user = await getUserByClerkId(clerkId);
     if (!user) return [];
 
-    return await getUserPlaylists(user.id);
+    // Get playlists
+    const playlists = await getUserPlaylists(user.id);
+
+    // For each playlist, get the first 4 songs
+    const playlistsWithSongs = await Promise.all(
+      playlists.map(async (playlist) => {
+        const songsResult = await db
+          .select({
+            song: songs,
+            addedAt: playlistSongs.addedAt,
+          })
+          .from(playlistSongs)
+          .innerJoin(songs, eq(playlistSongs.songId, songs.id))
+          .where(eq(playlistSongs.playlistId, playlist.id))
+          .orderBy(playlistSongs.addedAt)
+          .limit(4);
+
+        return {
+          playlist,
+          songs: songsResult.map((item) => item.song),
+        };
+      }),
+    );
+
+    return playlistsWithSongs;
   } catch (error) {
-    console.error("Error getting user playlists by Clerk ID:", error);
+    console.error(
+      "Error getting user playlists with songs by Clerk ID:",
+      error,
+    );
     return [];
   }
 }
@@ -193,7 +225,7 @@ export async function createSong(formData: FormData) {
       })
       .returning();
 
-    revalidatePath(`/profile/${user.clerkId}`);
+    revalidatePath(`/profile/${user.username}`);
 
     return result[0];
   } catch (error) {
@@ -448,7 +480,7 @@ export async function deleteSong(songId: string) {
     // Delete from database (cascade will handle playlist_songs and likes)
     await db.delete(songs).where(eq(songs.id, songId));
 
-    revalidatePath(`/profile/${user.clerkId}`);
+    revalidatePath(`/profile/${user.username}`);
     revalidatePath("/");
 
     return { success: true };
@@ -615,5 +647,42 @@ export async function searchSongs(query: string): Promise<Song[]> {
   } catch (error) {
     console.error("Error searching songs:", error);
     return [];
+  }
+}
+
+/**
+ * Get user playlists by Clerk ID (without songs for efficiency)
+ */
+export async function getUserPlaylistsByClerkId(
+  clerkId: string,
+): Promise<Playlist[]> {
+  try {
+    const user = await getUserByClerkId(clerkId);
+    if (!user) return [];
+
+    return await getUserPlaylists(user.id);
+  } catch (error) {
+    console.error("Error getting user playlists by Clerk ID:", error);
+    return [];
+  }
+}
+
+/**
+ * Get a user by their username
+ */
+export async function getUserByUsername(
+  username: string,
+): Promise<User | null> {
+  try {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username))
+      .limit(1);
+
+    return result[0] || null;
+  } catch (error) {
+    console.error("Error getting user by username:", error);
+    return null;
   }
 }

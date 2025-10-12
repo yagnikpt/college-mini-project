@@ -3,19 +3,19 @@ import { notFound } from "next/navigation";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
 import {
-  getUserByClerkId,
-  getUserPlaylistsByClerkId,
+  getUserByUsername,
+  getUserPlaylistsWithSongsByClerkId,
   getUserSongsByClerkId,
 } from "@/lib/data/user";
 
 interface ProfilePageProps {
-  params: Promise<{ userId: string }>;
+  params: Promise<{ username: string }>;
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { userId } = await params;
+  const { username } = await params;
   const { userId: currentUserId } = await auth();
-  const user = await getUserByClerkId(userId);
+  const user = await getUserByUsername(username);
 
   if (!user) {
     notFound();
@@ -23,10 +23,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   const [songs, playlists] = await Promise.all([
     getUserSongsByClerkId(user.clerkId),
-    getUserPlaylistsByClerkId(user.clerkId),
+    getUserPlaylistsWithSongsByClerkId(user.clerkId),
   ]);
 
-  const isOwnProfile = currentUserId === userId;
+  const isOwnProfile = currentUserId === user.clerkId;
 
   return (
     <div className="h-dvh bg-background">
@@ -37,10 +37,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 }
 
 export async function generateMetadata({ params }: ProfilePageProps) {
-  const { userId } = await params;
+  const { username } = await params;
 
   try {
-    const user = await getUserByClerkId(userId);
+    const user = await getUserByUsername(username);
 
     if (!user) {
       return {

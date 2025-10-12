@@ -6,6 +6,7 @@ import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
 import { Calendar, Clock, Music, Play, Plus, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PlaylistCover } from "@/components/playlists/PlaylistCover";
 import { SongList } from "@/components/songs/SongList";
 import {
   addSongToPlaylist,
@@ -112,9 +113,7 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
         <div className="flex flex-col md:flex-row md:items-end md:space-x-6 mb-8">
           {/* Playlist Cover */}
           <div className="relative">
-            <div className="w-48 h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Music className="w-16 h-16 text-white" />
-            </div>
+            <PlaylistCover songs={songs} size="md" />
           </div>
 
           {/* Playlist Info */}

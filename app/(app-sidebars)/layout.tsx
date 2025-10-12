@@ -10,7 +10,7 @@ export default function Layout({
     <>
       <div className="h-dvh flex w-full">
         <LeftSidebar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto pb-28">{children}</main>
       </div>
       <PlayerControls />
     </>

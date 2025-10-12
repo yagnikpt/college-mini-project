@@ -10,6 +10,7 @@ import {
 } from "@heroui/dropdown";
 import { Clock, MoreVertical, Play, Plus, User } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   addSongToPlaylist,
@@ -236,12 +237,15 @@ export function SongList({
               {song.genre && ` • ${song.genre}`}
             </p>
             {showUploader && song.username && (
-              <div className="flex items-center gap-1 mt-1">
+              <Link
+                href={`/profile/${song.username}`}
+                className="flex items-center gap-1 mt-1"
+              >
                 <User className="w-3 h-3 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">
                   {song.username}
                 </span>
-              </div>
+              </Link>
             )}
           </div>
 

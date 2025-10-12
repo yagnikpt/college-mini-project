@@ -6,11 +6,25 @@ import { Skeleton } from "@heroui/skeleton";
 import { Home, ListMusic, Search, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getUserByClerkId } from "@/lib/data/user";
+import type { User } from "@/lib/db/schema";
 
 export default function Nav() {
   const { isLoaded, isSignedIn } = useAuth();
-  const { user } = useUser();
+  const { user: clerkUser } = useUser();
   const router = useRouter();
+  const [dbUser, setDbUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (clerkUser?.id) {
+        const user = await getUserByClerkId(clerkUser.id);
+        setDbUser(user);
+      }
+    };
+    fetchUser();
+  }, [clerkUser?.id]);
 
   return (
     <Navbar maxWidth="2xl" className="w-full">
@@ -59,7 +73,8 @@ export default function Nav() {
                   <UserButton.Action
                     labelIcon={<UserRound className="size-4" />}
                     onClick={() =>
-                      user?.id && router.push(`/profile/${user.id}`)
+                      dbUser?.username &&
+                      router.push(`/profile/${dbUser.username}`)
                     }
                     label="Profile"
                   />

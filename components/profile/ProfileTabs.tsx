@@ -1,14 +1,21 @@
 "use client";
 
 import { ListMusic, Music } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
+import { PlaylistCover } from "@/components/playlists/PlaylistCover";
 import { SongList } from "@/components/songs/SongList";
 import type { Playlist, Song, User } from "@/lib/db/schema";
+
+interface PlaylistWithSongs {
+  playlist: Playlist;
+  songs: Song[];
+}
 
 interface ProfileTabsProps {
   user: User;
   songs: Song[];
-  playlists: Playlist[];
+  playlists: PlaylistWithSongs[];
 }
 
 export function ProfileTabs({ user, songs, playlists }: ProfileTabsProps) {
@@ -84,14 +91,15 @@ export function ProfileTabs({ user, songs, playlists }: ProfileTabsProps) {
               </p>
             </div>
           ) : (
-            playlists.map((playlist) => (
-              <div
+            playlists.map(({ playlist, songs }) => (
+              <Link
+                href={`/playlists/${playlist.id}`}
                 key={playlist.id}
                 className="group bg-card rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
               >
                 {/* Playlist Cover */}
-                <div className="aspect-square bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg mb-4 flex items-center justify-center">
-                  <ListMusic className="w-12 h-12 text-white" />
+                <div className="mb-4">
+                  <PlaylistCover songs={songs} />
                 </div>
 
                 {/* Playlist Info */}
@@ -109,7 +117,7 @@ export function ProfileTabs({ user, songs, playlists }: ProfileTabsProps) {
                   <span>{playlist.isPublic ? "Public" : "Private"}</span>
                   <span>{formatDate(playlist.createdAt)}</span>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
