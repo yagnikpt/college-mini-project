@@ -28,6 +28,8 @@ export const songs = pgTable("songs", {
   description: text("description"),
   fileUrl: text("file_url").notNull(), // UploadThing URL
   fileKey: text("file_key").notNull(), // UploadThing key for deletion
+  coverArtUrl: text("cover_art_url"), // UploadThing URL for cover art
+  coverArtKey: text("cover_art_key"), // UploadThing key for cover art deletion
   duration: integer("duration"), // in seconds
   genre: varchar("genre", { length: 100 }),
   userId: uuid("user_id")

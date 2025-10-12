@@ -12,6 +12,7 @@ import {
 import { Select, SelectItem } from "@heroui/select";
 import { Spinner } from "@heroui/spinner";
 import { Upload } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { createSong } from "@/lib/data/user";
 import { UploadButton } from "@/utils/uploadthing";
@@ -59,6 +60,8 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
   const [description, setDescription] = useState("");
   const [genre, setGenre] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [coverArtUrl, setCoverArtUrl] = useState<string>("");
+  const [coverArtKey, setCoverArtKey] = useState<string>("");
 
   const handleUploadComplete = async (res: UploadResponse[]) => {
     if (!res?.[0]) return;
@@ -81,6 +84,8 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
       formData.append("genre", genre || "");
       formData.append("fileUrl", res[0].ufsUrl);
       formData.append("fileKey", res[0].key);
+      formData.append("coverArtUrl", coverArtUrl || "");
+      formData.append("coverArtKey", coverArtKey || "");
       formData.append("duration", duration.toString());
 
       await createSong(formData);
@@ -90,6 +95,8 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
       setArtist("");
       setDescription("");
       setGenre("");
+      setCoverArtUrl("");
+      setCoverArtKey("");
 
       onSuccess?.();
       onClose();
@@ -98,6 +105,12 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleCoverArtUploadComplete = async (res: UploadResponse[]) => {
+    if (!res?.[0]) return;
+    setCoverArtUrl(res[0].ufsUrl);
+    setCoverArtKey(res[0].key);
   };
 
   return (
@@ -142,6 +155,40 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
                 <SelectItem key={g}>{g}</SelectItem>
               ))}
             </Select>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Cover Art (optional)</p>
+              {coverArtUrl && (
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={coverArtUrl}
+                    alt="Cover art preview"
+                    width={64}
+                    height={64}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                  <span className="text-sm text-gray-600">
+                    Cover art uploaded
+                  </span>
+                </div>
+              )}
+              <UploadButton
+                endpoint="imageUploader"
+                onClientUploadComplete={handleCoverArtUploadComplete}
+                onUploadError={(error) => {
+                  console.log("Cover art upload error:", error);
+                }}
+                appearance={{
+                  button: {
+                    background: "hsl(var(--muted))",
+                    color: "hsl(var(--foreground))",
+                    borderRadius: "0.5rem",
+                    padding: "0.5rem 1rem",
+                    fontSize: "0.875rem",
+                  },
+                }}
+              />
+            </div>
 
             <div className="flex justify-center">
               {isUploading ? (

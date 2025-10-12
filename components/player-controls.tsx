@@ -64,7 +64,14 @@ export function PlayerControls() {
         {/* Current Song Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-            {currentSong.fileUrl ? (
+            {currentSong.coverArtUrl ? (
+              <Image
+                src={currentSong.coverArtUrl}
+                alt={`${currentSong.title} cover art`}
+                fill
+                className="object-cover"
+              />
+            ) : currentSong.fileUrl ? (
               <div className="w-full h-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
                 <Image
                   src={"/headphone.svg"}

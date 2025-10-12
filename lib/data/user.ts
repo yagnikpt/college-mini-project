@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { UTApi } from "uploadthing/server";
 import { db } from "@/lib/db";
 import type { NewUser, Playlist, Song, User } from "@/lib/db/schema";
 import { playlistSongs, playlists, songs, users } from "@/lib/db/schema";
@@ -161,6 +162,8 @@ export async function createSong(formData: FormData) {
   const genre = formData.get("genre") as string;
   const fileUrl = formData.get("fileUrl") as string;
   const fileKey = formData.get("fileKey") as string;
+  const coverArtUrl = formData.get("coverArtUrl") as string;
+  const coverArtKey = formData.get("coverArtKey") as string;
   const duration = parseInt(formData.get("duration") as string, 10);
 
   if (!title || !artist || !fileUrl || !fileKey) {
@@ -182,6 +185,8 @@ export async function createSong(formData: FormData) {
         description: description || undefined,
         fileUrl,
         fileKey,
+        coverArtUrl: coverArtUrl || undefined,
+        coverArtKey: coverArtKey || undefined,
         duration: duration || undefined,
         genre: genre || undefined,
         userId: user.id,
@@ -393,6 +398,67 @@ export async function removeSongFromPlaylist(formData: FormData) {
 }
 
 /**
+ * Delete a song (server action)
+ */
+export async function deleteSong(songId: string) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  // Get the user from database
+  const user = await getUserByClerkId(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // Get the song to verify ownership and get file keys
+  const song = await db
+    .select()
+    .from(songs)
+    .where(eq(songs.id, songId))
+    .limit(1);
+
+  if (!song[0]) {
+    throw new Error("Song not found");
+  }
+
+  if (song[0].userId !== user.id) {
+    throw new Error("Access denied");
+  }
+
+  try {
+    const utapi = new UTApi();
+
+    // Delete files from UploadThing
+    const filesToDelete = [];
+    if (song[0].fileKey) {
+      filesToDelete.push(song[0].fileKey);
+    }
+    if (song[0].coverArtKey) {
+      filesToDelete.push(song[0].coverArtKey);
+    }
+
+    if (filesToDelete.length > 0) {
+      await utapi.deleteFiles(filesToDelete);
+      console.log("Deleted files from UploadThing:", filesToDelete);
+    }
+
+    // Delete from database (cascade will handle playlist_songs and likes)
+    await db.delete(songs).where(eq(songs.id, songId));
+
+    revalidatePath(`/profile/${user.clerkId}`);
+    revalidatePath("/");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting song:", error);
+    throw new Error("Failed to delete song");
+  }
+}
+
+/**
  * Get all public playlists
  */
 export async function getPublicPlaylists(): Promise<Playlist[]> {
@@ -423,6 +489,8 @@ export async function getAllSongs(): Promise<Song[]> {
         description: songs.description,
         fileUrl: songs.fileUrl,
         fileKey: songs.fileKey,
+        coverArtUrl: songs.coverArtUrl,
+        coverArtKey: songs.coverArtKey,
         duration: songs.duration,
         genre: songs.genre,
         userId: songs.userId,
@@ -461,6 +529,8 @@ export async function searchSongs(query: string): Promise<Song[]> {
         description: songs.description,
         fileUrl: songs.fileUrl,
         fileKey: songs.fileKey,
+        coverArtUrl: songs.coverArtUrl,
+        coverArtKey: songs.coverArtKey,
         duration: songs.duration,
         genre: songs.genre,
         userId: songs.userId,

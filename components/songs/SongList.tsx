@@ -9,8 +9,14 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { Clock, MoreVertical, Play, Plus, User } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { addSongToPlaylist, getUserPlaylistsByClerkId } from "@/lib/data/user";
+import {
+  addSongToPlaylist,
+  deleteSong,
+  getUserByClerkId,
+  getUserPlaylistsByClerkId,
+} from "@/lib/data/user";
 import type { Playlist, Song } from "@/lib/db/schema";
 import { usePlayer } from "@/lib/player-context";
 
@@ -36,6 +42,7 @@ export function SongList({
   const { playSong, addToQueue } = usePlayer();
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+  const [currentUserDbId, setCurrentUserDbId] = useState<string | null>(null);
 
   const loadUserPlaylists = useCallback(async () => {
     if (!user?.id || userPlaylists.length > 0) return;
@@ -56,7 +63,16 @@ export function SongList({
     if (user?.id && userPlaylists.length === 0) {
       loadUserPlaylists();
     }
-  }, [user?.id, userPlaylists.length, loadUserPlaylists]);
+
+    // Load current user database ID
+    if (user?.id && !currentUserDbId) {
+      getUserByClerkId(user.id).then((userData) => {
+        if (userData) {
+          setCurrentUserDbId(userData.id);
+        }
+      });
+    }
+  }, [user?.id, userPlaylists.length, loadUserPlaylists, currentUserDbId]);
 
   const handleAddToPlaylist = async (songId: string, playlistId: string) => {
     try {
@@ -71,6 +87,25 @@ export function SongList({
     }
   };
 
+  const handleDeleteSong = async (songId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this song? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteSong(songId);
+      // Refresh the page or update the list
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting song:", error);
+      alert("Failed to delete song. Please try again.");
+    }
+  };
+
   const getDropdownItems = (song: ExtendedSong) => {
     const items = [
       <DropdownItem key="play-now" onPress={() => playSong(song, songs)}>
@@ -80,6 +115,19 @@ export function SongList({
         Add to Queue
       </DropdownItem>,
     ];
+
+    // Add delete option if user owns this song
+    if (currentUserDbId && song.userId === currentUserDbId) {
+      items.push(
+        <DropdownItem
+          key="delete-song"
+          onPress={() => handleDeleteSong(song.id)}
+          color="danger"
+        >
+          Delete Song
+        </DropdownItem>,
+      );
+    }
 
     // Add playlist items if user is logged in
     if (user?.id) {
@@ -162,6 +210,23 @@ export function SongList({
           >
             <Play className="w-4 h-4" />
           </Button>
+
+          {/* Cover Art */}
+          <div className="w-12 h-12 flex-shrink-0">
+            {song.coverArtUrl ? (
+              <Image
+                src={song.coverArtUrl}
+                alt={`${song.title} cover art`}
+                width={48}
+                height={48}
+                className="w-full h-full object-cover rounded"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted rounded flex items-center justify-center">
+                <Play className="w-6 h-6 text-muted-foreground" />
+              </div>
+            )}
+          </div>
 
           {/* Song Info */}
           <div className="flex-1 min-w-0">

@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
       const primaryEmail = email_addresses?.[0]?.email_address;
 
-      console.log("Clerk Webhook Received for: " + primaryEmail);
+      console.log(`Clerk Webhook Received for: ${primaryEmail}`);
 
       if (!primaryEmail) {
         console.error("No email found for user:", clerkId);
