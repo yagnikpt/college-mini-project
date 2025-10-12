@@ -105,7 +105,7 @@ export function PlayerControls() {
               isIconOnly
               variant="light"
               size="sm"
-              className="text-muted-foreground"
+              className="text-muted-foreground hidden"
             >
               <Shuffle className="w-4 h-4" />
             </Button>
@@ -147,7 +147,7 @@ export function PlayerControls() {
               isIconOnly
               variant="light"
               size="sm"
-              className="text-muted-foreground"
+              className="text-muted-foreground hidden"
             >
               <Repeat className="w-4 h-4" />
             </Button>
@@ -164,7 +164,7 @@ export function PlayerControls() {
               onChange={handleProgressChange}
               maxValue={100}
               minValue={0}
-              className="flex-1"
+              className="flex-1 cursor-pointer"
               aria-label="Progress"
             />
             <span className="text-xs text-muted-foreground w-10">
@@ -180,7 +180,8 @@ export function PlayerControls() {
             isIconOnly
             variant="light"
             size="sm"
-            onPress={() => setVolume(volume > 0 ? 0 : 0.7)}
+            className="hidden"
+            onPress={() => setVolume(volume > 0 ? 0 : 1)}
           >
             {volume === 0 ? (
               <VolumeX className="w-4 h-4" />

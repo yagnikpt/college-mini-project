@@ -13,7 +13,7 @@ export default function LeftSidebar() {
           width={32}
           height={32}
         />
-        <p className="font-bold text-inherit ml-2">Music Player</p>
+        <p className="font-bold text-inherit ml-2">Harmony</p>
       </div>
       <nav className="space-y-2 mt-8 px-2">
         <Link

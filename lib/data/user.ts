@@ -511,6 +511,67 @@ export async function getAllSongs(): Promise<Song[]> {
 }
 
 /**
+ * Get paginated songs for home page
+ */
+export async function getSongsPaginated(
+  offset: number = 0,
+  limit: number = 20,
+): Promise<{
+  songs: Song[];
+  hasMore: boolean;
+  total: number;
+}> {
+  try {
+    // Get total count
+    const totalResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(songs);
+
+    const total = totalResult[0]?.count || 0;
+
+    // Get paginated songs
+    const result = await db
+      .select({
+        id: songs.id,
+        title: songs.title,
+        artist: songs.artist,
+        description: songs.description,
+        fileUrl: songs.fileUrl,
+        fileKey: songs.fileKey,
+        coverArtUrl: songs.coverArtUrl,
+        coverArtKey: songs.coverArtKey,
+        duration: songs.duration,
+        genre: songs.genre,
+        userId: songs.userId,
+        createdAt: songs.createdAt,
+        updatedAt: songs.updatedAt,
+        username: users.username,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(songs)
+      .innerJoin(users, eq(songs.userId, users.id))
+      .orderBy(sql`${songs.createdAt} DESC`)
+      .limit(limit)
+      .offset(offset);
+
+    const hasMore = offset + limit < total;
+
+    return {
+      songs: result,
+      hasMore,
+      total,
+    };
+  } catch (error) {
+    console.error("Error getting paginated songs:", error);
+    return {
+      songs: [],
+      hasMore: false,
+      total: 0,
+    };
+  }
+}
+
+/**
  * Search songs by title, artist, or genre
  */
 export async function searchSongs(query: string): Promise<Song[]> {

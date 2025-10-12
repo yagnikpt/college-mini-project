@@ -33,7 +33,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [playerState, setPlayerState] = useState<PlayerState>({
     currentSong: null,
     isPlaying: false,
-    volume: 0.7,
+    volume: 1,
     currentTime: 0,
     duration: 0,
     queue: [],
