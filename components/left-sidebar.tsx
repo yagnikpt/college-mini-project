@@ -15,24 +15,24 @@ export default function LeftSidebar() {
         />
         <p className="font-bold text-inherit ml-2">Harmony</p>
       </div>
-      <nav className="space-y-2 mt-8 px-2">
+      <nav className="space-y-2 mt-8">
         <Link
           href="/"
-          className={`flex items-center text-muted-foreground hover:text-foreground py-2`}
+          className={`flex items-center text-muted-foreground hover:text-foreground py-2 hover:bg-zinc-200/50 rounded-lg px-2 transition-colors`}
         >
           <Home className="size-5 mr-2" />
           Home
         </Link>
         <Link
           href="/search"
-          className={`flex items-center text-muted-foreground hover:text-foreground py-2`}
+          className={`flex items-center text-muted-foreground hover:text-foreground py-2 hover:bg-zinc-200/50 rounded-lg px-2 transition-colors`}
         >
           <Search className="size-5 mr-2" />
           Search
         </Link>
         <Link
           href="/playlists"
-          className={`flex items-center text-muted-foreground hover:text-foreground py-2`}
+          className={`flex items-center text-muted-foreground hover:text-foreground py-2 hover:bg-zinc-200/50 rounded-lg px-2 transition-colors`}
         >
           <ListMusic className="size-5 mr-2" />
           Playlists
