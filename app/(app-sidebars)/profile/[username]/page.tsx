@@ -2,11 +2,9 @@ import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
-import {
-  getUserByUsername,
-  getUserPlaylistsWithSongsByClerkId,
-  getUserSongsByClerkId,
-} from "@/lib/data/user";
+import { getUserPlaylistsWithSongsByClerkId } from "@/lib/data/playlists";
+import { getUserSongsByClerkId } from "@/lib/data/songs";
+import { getUserByUsername } from "@/lib/data/users";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;

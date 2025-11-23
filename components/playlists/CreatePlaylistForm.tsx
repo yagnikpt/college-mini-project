@@ -5,7 +5,7 @@ import { Checkbox } from "@heroui/checkbox";
 import { Input, Textarea } from "@heroui/input";
 import { Spinner } from "@heroui/spinner";
 import { useState } from "react";
-import { createPlaylist } from "@/lib/data/user";
+import { createPlaylist } from "@/lib/data/playlists";
 
 interface CreatePlaylistFormProps {
   onSuccess: () => void;
@@ -14,7 +14,7 @@ interface CreatePlaylistFormProps {
 export function CreatePlaylistForm({ onSuccess }: CreatePlaylistFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -90,18 +90,11 @@ export function CreatePlaylistForm({ onSuccess }: CreatePlaylistFormProps) {
       <div className="flex justify-end gap-3 pt-4">
         <Button
           type="submit"
-          color="primary"
+          color={isSubmitting ? "default" : "primary"}
           disabled={isSubmitting}
-          className="min-w-[100px]"
+          className="min-w-[100px] font-medium"
         >
-          {isSubmitting ? (
-            <>
-              <Spinner size="sm" className="mr-2" />
-              Creating...
-            </>
-          ) : (
-            "Create Playlist"
-          )}
+          {isSubmitting ? <Spinner size="sm" className="mr-2" /> : "Create"}
         </Button>
       </div>
     </form>

@@ -2,15 +2,15 @@
 
 import { useUser } from "@clerk/nextjs";
 import { ListMusic } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getUserPlaylistsWithSongsByClerkId } from "@/lib/data/user";
+import { getUserPlaylistsWithSongsByClerkId } from "@/lib/data/playlists";
 import type { Playlist, Song } from "@/lib/db/schema";
-import { PlaylistCover } from "./PlaylistCover";
+import PlaylistCard from "./PlaylistCard";
 
 interface PlaylistWithSongs {
   playlist: Playlist;
   songs: Song[];
+  songsCount: number;
 }
 
 export function PlaylistsList() {
@@ -34,14 +34,6 @@ export function PlaylistsList() {
 
     loadPlaylists();
   }, [user?.id]);
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(date));
-  };
 
   if (loading) {
     return (
@@ -76,33 +68,13 @@ export function PlaylistsList() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {playlists.map(({ playlist, songs }) => (
-        <Link
-          href={`/playlists/${playlist.id}`}
+      {playlists.map(({ playlist, songs, songsCount }) => (
+        <PlaylistCard
+          playlist={playlist}
+          songs={songs}
+          songsCount={songsCount}
           key={playlist.id}
-          className="group bg-card rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-        >
-          {/* Playlist Cover */}
-          <div className="mb-4">
-            <PlaylistCover songs={songs} />
-          </div>
-
-          {/* Playlist Info */}
-          <h3 className="font-medium text-foreground mb-1 truncate">
-            {playlist.name}
-          </h3>
-          {playlist.description && (
-            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-              {playlist.description}
-            </p>
-          )}
-
-          {/* Playlist Meta */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{playlist.isPublic ? "Public" : "Private"}</span>
-            <span>{formatDate(playlist.createdAt)}</span>
-          </div>
-        </Link>
+        />
       ))}
     </div>
   );

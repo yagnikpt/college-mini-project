@@ -2,17 +2,35 @@
 
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@heroui/button";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/dropdown";
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
-import { Calendar, Clock, Music, Play, Plus, User } from "lucide-react";
+import {
+  Clock,
+  Edit,
+  MoreVertical,
+  Music,
+  Play,
+  Plus,
+  Share2,
+  Trash,
+  User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { EditPlaylistModal } from "@/components/playlists/EditPlaylistModal";
 import { PlaylistCover } from "@/components/playlists/PlaylistCover";
 import { SongList } from "@/components/songs/SongList";
 import {
   addSongToPlaylist,
-  getUserSongsByClerkId,
+  deletePlaylist,
   removeSongFromPlaylist,
-} from "@/lib/data/user";
+} from "@/lib/data/playlists";
+import { getUserSongsByClerkId } from "@/lib/data/songs";
 import type { User as DbUser, Playlist, Song } from "@/lib/db/schema";
 import { usePlayer } from "@/lib/player-context";
 
@@ -29,6 +47,8 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
   const [userSongs, setUserSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const { user } = useUser();
   const { playSong } = usePlayer();
   const router = useRouter();
@@ -82,6 +102,24 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
     }
   };
 
+  const handleDeletePlaylist = async () => {
+    if (!confirm("Are you sure you want to delete this playlist?")) return;
+
+    try {
+      await deletePlaylist(playlist.id);
+      router.push("/playlists");
+    } catch (error) {
+      console.error("Error deleting playlist:", error);
+    }
+  };
+
+  const handleSharePlaylist = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    // You might want to add a toast notification here
+    alert("Playlist link copied to clipboard!");
+  };
+
   const handlePlaySong = (song: Song) => {
     playSong(song, songs);
   };
@@ -91,14 +129,6 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(date));
   };
 
   const totalDuration = songs.reduce(
@@ -118,61 +148,94 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
 
           {/* Playlist Info */}
           <div className="flex-1 mt-6 md:mt-0">
-            <div className="flex items-start justify-between">
+            <div className="flex items-end justify-between">
               <div className="flex-1">
+                <span className="text-sm text-muted-foreground">
+                  {playlist.isPublic ? "Public Playlist" : "Private Playlist"}
+                </span>
+
                 <h1 className="text-4xl font-bold text-foreground mb-2">
                   {playlist.name}
                 </h1>
 
-                {playlist.description && (
-                  <p className="text-muted-foreground mb-4 max-w-2xl">
-                    {playlist.description}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-2">
                   <div className="flex items-center gap-1">
                     <User className="w-4 h-4" />
-                    <span>Created by {playlistUser.username}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Music className="w-4 h-4" />
-                    <span>{songs.length} songs</span>
+                    <span>
+                      {playlistUser.username} <b>·</b> {songs.length} songs
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>{formatDuration(totalDuration)}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>Created {formatDate(playlist.createdAt)}</span>
-                  </div>
                 </div>
+
+                {playlist.description && (
+                  <p className="text-muted-foreground text-sm max-w-prose">
+                    {playlist.description}
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3 ml-4">
+              <div className="flex items-center gap-3 ml-4 mb-2">
                 {songs.length > 0 && (
                   <Button
                     color="primary"
                     startContent={<Play className="w-4 h-4" />}
                     onPress={() => handlePlaySong(songs[0])}
+                    className="font-medium"
                   >
-                    Play All
+                    Play
                   </Button>
                 )}
 
                 {isOwner && (
-                  <Button
-                    variant="flat"
-                    startContent={<Plus className="w-4 h-4" />}
-                    onPress={() => {
-                      setIsAddModalOpen(true);
-                      loadUserSongs();
-                    }}
-                  >
-                    Add Songs
-                  </Button>
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button isIconOnly variant="flat">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu aria-label="Playlist Actions">
+                      <DropdownItem
+                        key="add-songs"
+                        startContent={<Plus className="w-4 h-4" />}
+                        onPress={() => {
+                          setIsAddModalOpen(true);
+                          loadUserSongs();
+                        }}
+                      >
+                        Add Songs
+                      </DropdownItem>
+                      <DropdownItem
+                        key="edit-playlist"
+                        startContent={<Edit className="w-4 h-4" />}
+                        onPress={() => {
+                          setIsEditModalOpen(true);
+                        }}
+                      >
+                        Edit Playlist
+                      </DropdownItem>
+                      <DropdownItem
+                        key="share-playlist"
+                        startContent={<Share2 className="w-4 h-4" />}
+                        onPress={handleSharePlaylist}
+                      >
+                        Share Playlist
+                      </DropdownItem>
+                      <DropdownItem
+                        key="delete-playlist"
+                        className="text-danger"
+                        color="danger"
+                        startContent={<Trash className="w-4 h-4" />}
+                        onPress={handleDeletePlaylist}
+                      >
+                        Delete Playlist
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
                 )}
               </div>
             </div>
@@ -263,6 +326,12 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
             </ModalBody>
           </ModalContent>
         </Modal>
+
+        <EditPlaylistModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          playlist={playlist}
+        />
       </div>
     </div>
   );

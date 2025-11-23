@@ -5,7 +5,7 @@ import { Spinner } from "@heroui/spinner";
 import { useCallback, useEffect, useState } from "react";
 import Nav from "@/components/nav";
 import { SongList } from "@/components/songs/SongList";
-import { getSongsPaginated } from "@/lib/data/user";
+import { getSongsPaginated } from "@/lib/data/songs";
 import type { Song } from "@/lib/db/schema";
 
 export default function Home() {

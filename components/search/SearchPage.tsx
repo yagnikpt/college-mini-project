@@ -4,7 +4,7 @@ import { Input } from "@heroui/input";
 import { Music, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { SongList } from "@/components/songs/SongList";
-import { searchSongs } from "@/lib/data/user";
+import { searchSongs } from "@/lib/data/songs";
 import type { Song } from "@/lib/db/schema";
 
 export function SearchPage() {
@@ -68,6 +68,7 @@ export function SearchPage() {
             startContent={<Search className="w-4 h-4 text-muted-foreground" />}
             size="lg"
             className="max-w-md mx-auto"
+            radius="lg"
           />
         </div>
 

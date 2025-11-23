@@ -8,16 +8,16 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/dropdown";
-import { Clock, MoreVertical, Play, Plus, User } from "lucide-react";
+import { Clock, ListPlus, MoreVertical, Play, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   addSongToPlaylist,
-  deleteSong,
-  getUserByClerkId,
   getUserPlaylistsByClerkId,
-} from "@/lib/data/user";
+} from "@/lib/data/playlists";
+import { deleteSong } from "@/lib/data/songs";
+import { getUserByClerkId } from "@/lib/data/users";
 import type { Playlist, Song } from "@/lib/db/schema";
 import { usePlayer } from "@/lib/player-context";
 
@@ -265,7 +265,7 @@ export function SongList({
               onPress={() => addToQueue(song)}
               className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <Plus className="w-4 h-4" />
+              <ListPlus className="w-4 h-4" />
             </Button>
 
             {/* More Options Dropdown */}

@@ -38,10 +38,11 @@ export function PlaylistsPage() {
 
           <Button
             color="primary"
-            startContent={<Plus className="w-4 h-4" />}
+            startContent={<Plus className="size-5" />}
             onPress={onOpen}
+            className="font-medium"
           >
-            Create Playlist
+            New Playlist
           </Button>
         </div>
 
@@ -52,7 +53,7 @@ export function PlaylistsPage() {
         <Modal isOpen={isOpen} onClose={onClose} size="md">
           <ModalContent>
             <ModalHeader>
-              <h3 className="text-lg font-semibold">Create New Playlist</h3>
+              <h3 className="text-lg font-semibold">New Playlist</h3>
             </ModalHeader>
             <ModalBody>
               <CreatePlaylistForm onSuccess={handlePlaylistCreated} />

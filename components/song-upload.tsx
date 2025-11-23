@@ -14,7 +14,7 @@ import { Spinner } from "@heroui/spinner";
 import { Upload } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { createSong } from "@/lib/data/user";
+import { createSong } from "@/lib/data/songs";
 import { UploadButton } from "@/utils/uploadthing";
 
 const GENRES = [
@@ -238,10 +238,11 @@ export function SongUpload({ onSuccess }: { onSuccess?: () => void }) {
     <>
       <Button
         color="primary"
-        startContent={<Upload className="w-4 h-4" />}
+        startContent={<Upload className="size-4" />}
         onPress={onOpen}
+        className="font-medium"
       >
-        Upload Song
+        Upload
       </Button>
 
       <SongUploadModal

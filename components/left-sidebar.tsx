@@ -1,8 +1,13 @@
-import { Home, ListMusic, Search } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
+import { Home, ListMusic, Search, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { getUserByClerkId } from "@/lib/data/users";
 
-export default function LeftSidebar() {
+export default async function LeftSidebar() {
+  const { userId } = await auth();
+  const user = userId ? await getUserByClerkId(userId) : null;
+
   return (
     <div className="w-64 h-full bg-background p-4 border-r border-zinc-400">
       <div className="flex items-center">
@@ -21,7 +26,7 @@ export default function LeftSidebar() {
           className={`flex items-center text-muted-foreground hover:text-foreground py-2 hover:bg-zinc-200/50 rounded-lg px-2 transition-colors`}
         >
           <Home className="size-5 mr-2" />
-          Home
+          Discover
         </Link>
         <Link
           href="/search"
@@ -37,6 +42,15 @@ export default function LeftSidebar() {
           <ListMusic className="size-5 mr-2" />
           Playlists
         </Link>
+        {user && (
+          <Link
+            href={`/profile/${user.username}`}
+            className={`flex items-center text-muted-foreground hover:text-foreground py-2 hover:bg-zinc-200/50 rounded-lg px-2 transition-colors`}
+          >
+            <User className="size-5 mr-2" />
+            Profile
+          </Link>
+        )}
       </nav>
     </div>
   );

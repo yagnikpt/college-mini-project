@@ -35,7 +35,7 @@ export function PlaylistCover({ songs, size = "auto" }: PlaylistCoverProps) {
     // No songs - show default icon
     return (
       <div
-        className={`${sizeClasses[size]} bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex items-center justify-center`}
+        className={`${sizeClasses[size]} bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex items-center justify-center aspect-square`}
       >
         <ListMusic className={`${iconSizes[size]} text-white`} />
       </div>

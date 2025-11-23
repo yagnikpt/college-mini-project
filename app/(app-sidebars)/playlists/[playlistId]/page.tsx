@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { PlaylistDetailPage } from "@/components/playlists/PlaylistDetailPage";
-import { getPlaylistWithSongs } from "@/lib/data/user";
+import { getPlaylistWithSongs } from "@/lib/data/playlists";
 
 interface PlaylistPageProps {
   params: Promise<{ playlistId: string }>;

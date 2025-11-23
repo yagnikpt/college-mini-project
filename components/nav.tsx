@@ -3,11 +3,11 @@ import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import { Button } from "@heroui/button";
 import { Navbar, NavbarContent, NavbarItem } from "@heroui/navbar";
 import { Skeleton } from "@heroui/skeleton";
-import { Home, ListMusic, Search, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getUserByClerkId } from "@/lib/data/user";
+import { getUserByClerkId } from "@/lib/data/users";
 import type { User } from "@/lib/db/schema";
 
 export default function Nav() {
@@ -28,7 +28,7 @@ export default function Nav() {
 
   return (
     <Navbar maxWidth="2xl" className="w-full">
-      <NavbarContent justify="start">
+      {/* <NavbarContent justify="start">
         <NavbarItem>
           <Button
             variant="light"
@@ -49,7 +49,7 @@ export default function Nav() {
             Search
           </Button>
         </NavbarItem>
-      </NavbarContent>
+      </NavbarContent> */}
       <NavbarContent justify="end">
         <NavbarItem>
           {isLoaded ? (
@@ -65,11 +65,6 @@ export default function Nav() {
                 }}
               >
                 <UserButton.MenuItems>
-                  <UserButton.Action
-                    labelIcon={<ListMusic className="size-4" />}
-                    onClick={() => router.push("/playlists")}
-                    label="Playlists"
-                  />
                   <UserButton.Action
                     labelIcon={<UserRound className="size-4" />}
                     onClick={() =>
