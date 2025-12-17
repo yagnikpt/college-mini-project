@@ -142,8 +142,8 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
         {/* Playlist Header */}
         <div className="flex flex-col md:flex-row md:items-end md:space-x-6 mb-8">
           {/* Playlist Cover */}
-          <div className="relative">
-            <PlaylistCover songs={songs} size="md" />
+          <div className="relative w-48">
+            <PlaylistCover songs={songs} />
           </div>
 
           {/* Playlist Info */}
@@ -192,7 +192,7 @@ export function PlaylistDetailPage({ playlistData }: PlaylistDetailPageProps) {
                 )}
 
                 {isOwner && (
-                  <Dropdown>
+                  <Dropdown placement="bottom-end">
                     <DropdownTrigger>
                       <Button isIconOnly variant="flat">
                         <MoreVertical className="w-4 h-4" />

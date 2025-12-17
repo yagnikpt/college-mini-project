@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import type { Playlist, Song, User } from "@/lib/db/schema";
@@ -9,12 +9,19 @@ import { playlistSongs, playlists, songs, users } from "@/lib/db/schema";
 import { getUserByClerkId } from "./users";
 
 // Helper function to get user playlists (internal or exported if needed elsewhere)
-export async function getUserPlaylists(userId: string): Promise<Playlist[]> {
+export async function getUserPlaylists(
+  userId: string,
+  getPrivate = false,
+): Promise<Playlist[]> {
   try {
     const result = await db
       .select()
       .from(playlists)
-      .where(eq(playlists.userId, userId))
+      .where(
+        getPrivate
+          ? eq(playlists.userId, userId)
+          : and(eq(playlists.userId, userId), eq(playlists.isPublic, true)),
+      )
       .orderBy(playlists.createdAt);
 
     return result;
@@ -29,6 +36,7 @@ export async function getUserPlaylists(userId: string): Promise<Playlist[]> {
  */
 export async function getUserPlaylistsWithSongsByClerkId(
   clerkId: string,
+  getPrivate = false,
 ): Promise<
   Array<{
     playlist: Playlist;
@@ -40,7 +48,7 @@ export async function getUserPlaylistsWithSongsByClerkId(
     const user = await getUserByClerkId(clerkId);
     if (!user) return [];
 
-    const playlists = await getUserPlaylists(user.id);
+    const playlists = await getUserPlaylists(user.id, getPrivate);
 
     // For each playlist, get the first 4 songs
     const playlistsWithSongs = await Promise.all(
@@ -390,6 +398,78 @@ export async function getPublicPlaylists(): Promise<Playlist[]> {
     return result;
   } catch (error) {
     console.error("Error getting public playlists:", error);
+    return [];
+  }
+}
+
+/**
+ * Search playlists by name or description
+ */
+/**
+ * Search playlists by name or description
+ */
+export async function searchPlaylists(query: string): Promise<
+  Array<{
+    playlist: Playlist;
+    user: User;
+    songsCount: number;
+    songs: Song[];
+  }>
+> {
+  try {
+    if (!query.trim()) {
+      return [];
+    }
+
+    const searchTerm = `%${query.toLowerCase()}%`;
+
+    // Find public playlists matching name or description
+    const matchedPlaylists = await db
+      .select({
+        playlist: playlists,
+        user: users,
+        songsCount: sql<number>`count(${playlistSongs.songId})`.mapWith(Number),
+      })
+      .from(playlists)
+      .innerJoin(users, eq(playlists.userId, users.id))
+      .leftJoin(playlistSongs, eq(playlists.id, playlistSongs.playlistId))
+      .where(
+        and(
+          eq(playlists.isPublic, true),
+          or(
+            sql`LOWER(${playlists.name}) LIKE ${searchTerm}`,
+            sql`LOWER(${playlists.description}) LIKE ${searchTerm}`,
+          ),
+        ),
+      )
+      .groupBy(playlists.id, users.id)
+      .orderBy(playlists.name)
+      .limit(20);
+
+    // Fetch songs for each playlist
+    const playlistsWithSongs = await Promise.all(
+      matchedPlaylists.map(async (item) => {
+        const songsResult = await db
+          .select({
+            song: songs,
+            addedAt: playlistSongs.addedAt,
+          })
+          .from(playlistSongs)
+          .innerJoin(songs, eq(playlistSongs.songId, songs.id))
+          .where(eq(playlistSongs.playlistId, item.playlist.id))
+          .orderBy(playlistSongs.addedAt)
+          .limit(4);
+
+        return {
+          ...item,
+          songs: songsResult.map((r) => r.song),
+        };
+      }),
+    );
+
+    return playlistsWithSongs;
+  } catch (error) {
+    console.error("Error searching playlists:", error);
     return [];
   }
 }

@@ -19,12 +19,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     notFound();
   }
 
+  const isOwnProfile = currentUserId === user.clerkId;
+
   const [songs, playlists] = await Promise.all([
     getUserSongsByClerkId(user.clerkId),
-    getUserPlaylistsWithSongsByClerkId(user.clerkId),
+    getUserPlaylistsWithSongsByClerkId(user.clerkId, isOwnProfile),
   ]);
-
-  const isOwnProfile = currentUserId === user.clerkId;
 
   return (
     <div className="h-dvh bg-background">

@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { NewUser, User } from "@/lib/db/schema";
 import { users } from "@/lib/db/schema";
@@ -72,6 +72,31 @@ export async function updateUser(
   } catch (error) {
     console.error("Error updating user:", error);
     return null;
+  }
+}
+
+/**
+ * Search users by username
+ */
+export async function searchUsers(query: string): Promise<User[]> {
+  try {
+    if (!query.trim()) {
+      return [];
+    }
+
+    const searchTerm = `%${query.toLowerCase()}%`;
+
+    const result = await db
+      .select()
+      .from(users)
+      .where(sql`LOWER(${users.username}) LIKE ${searchTerm}`)
+      .orderBy(users.username)
+      .limit(20);
+
+    return result;
+  } catch (error) {
+    console.error("Error searching users:", error);
+    return [];
   }
 }
 

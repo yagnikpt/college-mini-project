@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import type { UserResource } from "@clerk/types";
 import { Button } from "@heroui/button";
 import {
   Dropdown,
@@ -31,6 +32,204 @@ interface SongListProps {
   showUploader?: boolean;
   playlistId?: string; // For playlist detail pages
   onRemoveFromPlaylist?: (songId: string) => void; // For playlist detail pages
+}
+
+export function SongRow({
+  song,
+  index,
+  playSong,
+  addToQueue,
+  currentUserDbId,
+  showUploader,
+  handleDeleteSong,
+  userPlaylists,
+  loadingPlaylists,
+  handleAddToPlaylist,
+  onRemoveFromPlaylist,
+  playlistId,
+  user,
+}: {
+  song: ExtendedSong;
+  index: number;
+  playSong: (song: ExtendedSong, songs: ExtendedSong[]) => void;
+  addToQueue: (song: ExtendedSong) => void;
+  currentUserDbId: string | null;
+  showUploader: boolean;
+  handleDeleteSong: (songId: string) => void;
+  userPlaylists: Playlist[];
+  loadingPlaylists: boolean;
+  handleAddToPlaylist: (songId: string, playlistId: string) => void;
+  onRemoveFromPlaylist?: (songId: string) => void;
+  playlistId?: string;
+  user?: UserResource | null | undefined;
+}) {
+  const getDropdownItems = (song: ExtendedSong) => {
+    const items = [
+      <DropdownItem key="play-now" onPress={() => playSong(song, [song])}>
+        Play Now
+      </DropdownItem>,
+      <DropdownItem key="add-queue" onPress={() => addToQueue(song)}>
+        Add to Queue
+      </DropdownItem>,
+    ];
+
+    // Add delete option if user owns this song
+    if (currentUserDbId && song.userId === currentUserDbId) {
+      items.push(
+        <DropdownItem
+          key="delete-song"
+          onPress={() => handleDeleteSong(song.id)}
+          color="danger"
+        >
+          Delete Song
+        </DropdownItem>,
+      );
+    }
+
+    // Add playlist items if user is logged in
+    if (user?.id) {
+      if (loadingPlaylists) {
+        items.push(
+          <DropdownItem key="loading-playlists" isDisabled>
+            Loading playlists...
+          </DropdownItem>,
+        );
+      } else if (userPlaylists.length > 0) {
+        items.push(
+          <DropdownItem key="playlist-header" isDisabled>
+            <div className="font-medium text-foreground">Add to Playlist</div>
+          </DropdownItem>,
+        );
+        userPlaylists.forEach((playlist) => {
+          items.push(
+            <DropdownItem
+              key={`playlist-${playlist.id}`}
+              onPress={() => handleAddToPlaylist(song.id, playlist.id)}
+              className="pl-6"
+            >
+              {playlist.name}
+            </DropdownItem>,
+          );
+        });
+      }
+    }
+
+    // Add remove from playlist option if applicable
+    if (onRemoveFromPlaylist && playlistId) {
+      items.push(
+        <DropdownItem
+          key="remove-playlist"
+          onPress={() => onRemoveFromPlaylist(song.id)}
+          color="danger"
+        >
+          Remove from Playlist
+        </DropdownItem>,
+      );
+    }
+
+    return items;
+  };
+
+  const formatDuration = (seconds?: number | null) => {
+    if (!seconds) return "--:--";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors group">
+      {/* Song Number/Index */}
+      <div className="w-8 text-center text-sm text-muted-foreground">
+        {index + 1}
+      </div>
+
+      {/* Play Button */}
+      <Button
+        isIconOnly
+        variant="light"
+        size="sm"
+        onPress={() => playSong(song, [song])} // Note: Passed song as single list item here, might need parent list context if 'play all' implied
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <Play className="w-4 h-4" />
+      </Button>
+
+      {/* Cover Art */}
+      <div className="w-12 h-12 shrink-0">
+        {song.coverArtUrl ? (
+          <Image
+            src={song.coverArtUrl}
+            alt={`${song.title} cover art`}
+            width={48}
+            height={48}
+            className="w-full h-full object-cover rounded"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted rounded flex items-center justify-center">
+            <Play className="w-6 h-6 text-muted-foreground" />
+          </div>
+        )}
+      </div>
+
+      {/* Song Info */}
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium truncate">{song.title}</h4>
+        <p className="text-sm text-muted-foreground truncate">
+          {song.artist}
+          {song.genre && ` • ${song.genre}`}
+        </p>
+        {showUploader && song.username && (
+          <Link
+            href={`/profile/${song.username}`}
+            className="flex items-center gap-1 mt-1"
+          >
+            <User className="w-3 h-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              {song.username}
+            </span>
+          </Link>
+        )}
+      </div>
+
+      {/* Duration */}
+      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+        <Clock className="w-3 h-3" />
+        <span>{formatDuration(song.duration)}</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+        {/* Add to Queue */}
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onPress={() => addToQueue(song)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <ListPlus className="w-4 h-4" />
+        </Button>
+
+        {/* More Options Dropdown */}
+        <Dropdown>
+          <DropdownTrigger>
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu disabledKeys={[]}>
+            {getDropdownItems(song)}
+          </DropdownMenu>
+        </Dropdown>
+      </div>
+    </div>
+  );
 }
 
 export function SongList({
@@ -107,80 +306,6 @@ export function SongList({
     }
   };
 
-  const getDropdownItems = (song: ExtendedSong) => {
-    const items = [
-      <DropdownItem key="play-now" onPress={() => playSong(song, songs)}>
-        Play Now
-      </DropdownItem>,
-      <DropdownItem key="add-queue" onPress={() => addToQueue(song)}>
-        Add to Queue
-      </DropdownItem>,
-    ];
-
-    // Add delete option if user owns this song
-    if (currentUserDbId && song.userId === currentUserDbId) {
-      items.push(
-        <DropdownItem
-          key="delete-song"
-          onPress={() => handleDeleteSong(song.id)}
-          color="danger"
-        >
-          Delete Song
-        </DropdownItem>,
-      );
-    }
-
-    // Add playlist items if user is logged in
-    if (user?.id) {
-      if (loadingPlaylists) {
-        items.push(
-          <DropdownItem key="loading-playlists" isDisabled>
-            Loading playlists...
-          </DropdownItem>,
-        );
-      } else if (userPlaylists.length > 0) {
-        items.push(
-          <DropdownItem key="playlist-header" isDisabled>
-            <div className="font-medium text-foreground">Add to Playlist</div>
-          </DropdownItem>,
-        );
-        userPlaylists.forEach((playlist) => {
-          items.push(
-            <DropdownItem
-              key={`playlist-${playlist.id}`}
-              onPress={() => handleAddToPlaylist(song.id, playlist.id)}
-              className="pl-6"
-            >
-              {playlist.name}
-            </DropdownItem>,
-          );
-        });
-      }
-    }
-
-    // Add remove from playlist option if applicable
-    if (onRemoveFromPlaylist && playlistId) {
-      items.push(
-        <DropdownItem
-          key="remove-playlist"
-          onPress={() => onRemoveFromPlaylist(song.id)}
-          color="danger"
-        >
-          Remove from Playlist
-        </DropdownItem>,
-      );
-    }
-
-    return items;
-  };
-
-  const formatDuration = (seconds?: number | null) => {
-    if (!seconds) return "--:--";
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   if (songs.length === 0) {
     return (
       <div className="text-center py-8">
@@ -192,98 +317,22 @@ export function SongList({
   return (
     <div className="space-y-2">
       {songs.map((song, index) => (
-        <div
+        <SongRow
           key={`${song.id}-${index}`}
-          className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors group"
-        >
-          {/* Song Number/Index */}
-          <div className="w-8 text-center text-sm text-muted-foreground">
-            {index + 1}
-          </div>
-
-          {/* Play Button */}
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            onPress={() => playSong(song, songs)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Play className="w-4 h-4" />
-          </Button>
-
-          {/* Cover Art */}
-          <div className="w-12 h-12 flex-shrink-0">
-            {song.coverArtUrl ? (
-              <Image
-                src={song.coverArtUrl}
-                alt={`${song.title} cover art`}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover rounded"
-              />
-            ) : (
-              <div className="w-full h-full bg-muted rounded flex items-center justify-center">
-                <Play className="w-6 h-6 text-muted-foreground" />
-              </div>
-            )}
-          </div>
-
-          {/* Song Info */}
-          <div className="flex-1 min-w-0">
-            <h4 className="font-medium truncate">{song.title}</h4>
-            <p className="text-sm text-muted-foreground truncate">
-              {song.artist}
-              {song.genre && ` • ${song.genre}`}
-            </p>
-            {showUploader && song.username && (
-              <Link
-                href={`/profile/${song.username}`}
-                className="flex items-center gap-1 mt-1"
-              >
-                <User className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
-                  {song.username}
-                </span>
-              </Link>
-            )}
-          </div>
-
-          {/* Duration */}
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            <span>{formatDuration(song.duration)}</span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            {/* Add to Queue */}
-            <Button
-              isIconOnly
-              variant="light"
-              size="sm"
-              onPress={() => addToQueue(song)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <ListPlus className="w-4 h-4" />
-            </Button>
-
-            {/* More Options Dropdown */}
-            <Dropdown>
-              <DropdownTrigger>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>{getDropdownItems(song)}</DropdownMenu>
-            </Dropdown>
-          </div>
-        </div>
+          song={song}
+          index={index}
+          playSong={(s) => playSong(s, songs)}
+          addToQueue={addToQueue}
+          currentUserDbId={currentUserDbId}
+          showUploader={showUploader}
+          handleDeleteSong={handleDeleteSong}
+          userPlaylists={userPlaylists}
+          loadingPlaylists={loadingPlaylists}
+          handleAddToPlaylist={handleAddToPlaylist}
+          onRemoveFromPlaylist={onRemoveFromPlaylist}
+          playlistId={playlistId}
+          user={user}
+        />
       ))}
     </div>
   );

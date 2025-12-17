@@ -157,7 +157,7 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
             </Select>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium">Cover Art (optional)</p>
+              <p className="text-sm font-medium">Cover Art</p>
               {coverArtUrl && (
                 <div className="flex items-center gap-2">
                   <Image
@@ -197,27 +197,30 @@ function SongUploadModal({ isOpen, onClose, onSuccess }: SongUploadModalProps) {
                   <span>Saving song...</span>
                 </div>
               ) : (
-                <UploadButton
-                  endpoint="audioUploader"
-                  onClientUploadComplete={handleUploadComplete}
-                  onUploadError={(error) => {
-                    if (error.message?.includes("FileSizeMismatch")) {
-                      alert(
-                        "Upload failed: File size mismatch. Please try again.",
-                      );
-                      return;
-                    }
-                    console.log("Upload error:", error, error.code);
-                  }}
-                  appearance={{
-                    button: {
-                      background: "hsl(var(--primary))",
-                      color: "hsl(var(--primary-foreground))",
-                      borderRadius: "0.5rem",
-                      padding: "0.5rem 1rem",
-                    },
-                  }}
-                />
+                <div className="space-y-2 w-full">
+                  <p className="text-sm font-medium">Audio File</p>
+                  <UploadButton
+                    endpoint="audioUploader"
+                    onClientUploadComplete={handleUploadComplete}
+                    onUploadError={(error) => {
+                      if (error.message?.includes("FileSizeMismatch")) {
+                        alert(
+                          "Upload failed: File size mismatch. Please try again.",
+                        );
+                        return;
+                      }
+                      console.log("Upload error:", error, error.code);
+                    }}
+                    appearance={{
+                      button: {
+                        background: "hsl(var(--primary))",
+                        color: "hsl(var(--primary-foreground))",
+                        borderRadius: "0.5rem",
+                        padding: "0.5rem 1rem",
+                      },
+                    }}
+                  />
+                </div>
               )}
             </div>
           </div>
